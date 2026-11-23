@@ -39,6 +39,7 @@ def test_health(client):
     assert body["status"] == "ok"
     assert body["model_loaded"] is True
     assert "uptime_seconds" in body
+    assert "model_stage" in body
 
 
 def test_predict_default_returns_7_days(client):

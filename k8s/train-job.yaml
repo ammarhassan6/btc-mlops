@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: btc-train
+  labels:
+    app: btc-train
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: btc-train
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: train
+          image: ammarhassan1/btc-forecast-api:latest
+          imagePullPolicy: Always
+          command: ["sh", "-c"]
+          args:
+            - >-
+              python -m src.etl_fetch --out $DATA_DIR/raw/btc_raw.csv &&
+              python -m src.preprocess --input $DATA_DIR/raw/btc_raw.csv
+              --out $DATA_DIR/processed/btc_features.csv &&
+              python -m src.train_forecast --input $DATA_DIR/processed/btc_features.csv
+              --model-dir $MODEL_DIR
+          envFrom:
+            - configMapRef:
+                name: btc-config
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: btc-models-pvc
