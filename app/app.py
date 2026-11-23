@@ -73,6 +73,7 @@ def health():
         uptime_seconds=round(time.time() - START_TIME, 1),
         model_version=bundle["version"] if bundle else None,
         model_loaded=bundle is not None,
+        model_stage=os.getenv("MODEL_STAGE", "dev"),
     )
 
 
