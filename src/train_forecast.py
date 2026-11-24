@@ -7,11 +7,6 @@ from datetime import datetime, timezone
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (
-    mean_absolute_error,
-    mean_absolute_percentage_error,
-    mean_squared_error,
-)
 from statsmodels.tsa.arima.model import ARIMA
 
 ARIMA_ORDER = (5, 1, 0)
@@ -28,10 +23,11 @@ def fit_arima(prices):
 def evaluate(prices):
     train, test = prices[:-TEST_DAYS], prices[-TEST_DAYS:]
     preds = fit_arima(train).forecast(TEST_DAYS)
+    errors = test - preds
     return {
-        "mae": round(float(mean_absolute_error(test, preds)), 2),
-        "rmse": round(float(np.sqrt(mean_squared_error(test, preds))), 2),
-        "mape": round(float(mean_absolute_percentage_error(test, preds) * 100), 2),
+        "mae": round(float(np.mean(np.abs(errors))), 2),
+        "rmse": round(float(np.sqrt(np.mean(errors**2))), 2),
+        "mape": round(float(np.mean(np.abs(errors / test)) * 100), 2),
     }
 
 
