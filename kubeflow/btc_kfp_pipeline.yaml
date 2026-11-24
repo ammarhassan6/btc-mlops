@@ -1,0 +1,120 @@
+# PIPELINE DEFINITION
+# Name: btc-forecast-pipeline
+# Description: Fetch BTC prices, build features and train the ARIMA model
+components:
+  comp-fetch-data:
+    executorLabel: exec-fetch-data
+    outputDefinitions:
+      artifacts:
+        raw_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-preprocess:
+    executorLabel: exec-preprocess
+    inputDefinitions:
+      artifacts:
+        raw_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        features:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-train:
+    executorLabel: exec-train
+    inputDefinitions:
+      artifacts:
+        features:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      artifacts:
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-fetch-data:
+      container:
+        args:
+        - --out
+        - '{{$.outputs.artifacts[''raw_data''].path}}'
+        command:
+        - python
+        - -m
+        - src.etl_fetch
+        image: ammarhassan1/btc-forecast-api:latest
+    exec-preprocess:
+      container:
+        args:
+        - --input
+        - '{{$.inputs.artifacts[''raw_data''].path}}'
+        - --out
+        - '{{$.outputs.artifacts[''features''].path}}'
+        command:
+        - python
+        - -m
+        - src.preprocess
+        image: ammarhassan1/btc-forecast-api:latest
+    exec-train:
+      container:
+        args:
+        - --input
+        - '{{$.inputs.artifacts[''features''].path}}'
+        - --model-dir
+        - '{{$.outputs.artifacts[''model''].path}}'
+        command:
+        - python
+        - -m
+        - src.train_forecast
+        image: ammarhassan1/btc-forecast-api:latest
+pipelineInfo:
+  description: Fetch BTC prices, build features and train the ARIMA model
+  name: btc-forecast-pipeline
+root:
+  dag:
+    tasks:
+      fetch-data:
+        cachingOptions: {}
+        componentRef:
+          name: comp-fetch-data
+        taskInfo:
+          name: fetch-data
+      preprocess:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-preprocess
+        dependentTasks:
+        - fetch-data
+        inputs:
+          artifacts:
+            raw_data:
+              taskOutputArtifact:
+                outputArtifactKey: raw_data
+                producerTask: fetch-data
+        taskInfo:
+          name: preprocess
+      train:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-train
+        dependentTasks:
+        - preprocess
+        inputs:
+          artifacts:
+            features:
+              taskOutputArtifact:
+                outputArtifactKey: features
+                producerTask: preprocess
+        taskInfo:
+          name: train
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
