@@ -81,8 +81,7 @@ root:
   dag:
     tasks:
       fetch-data:
-        cachingOptions:
-          enableCache: true
+        cachingOptions: {}
         componentRef:
           name: comp-fetch-data
         taskInfo:

@@ -39,6 +39,8 @@ def train(features: dsl.Input[dsl.Dataset], model: dsl.Output[dsl.Model]):
 )
 def btc_pipeline():
     fetch_task = fetch_data()
+    # no inputs, so a cached result would reuse the first download forever
+    fetch_task.set_caching_options(False)
     preprocess_task = preprocess(raw_data=fetch_task.outputs["raw_data"])
     train(features=preprocess_task.outputs["features"])
 
