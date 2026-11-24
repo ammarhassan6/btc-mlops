@@ -45,7 +45,7 @@ def reload_task():
 
 
 default_args = {
-    "owner": "member2",
+    "owner": "btc-team",
     "retries": 1,
     "retry_delay": timedelta(minutes=2),
 }
