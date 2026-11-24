@@ -5,7 +5,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY app/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r /tmp/requirements.txt
+    && pip install --no-cache-dir -r /tmp/requirements.txt \
+    && find /opt/venv -type d -name tests -prune -exec rm -rf {} + \
+    && pip uninstall -y pip setuptools
 
 
 FROM python:3.10-slim
