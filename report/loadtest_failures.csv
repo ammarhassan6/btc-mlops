@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences
+POST,/predict (history),HTTPError('503 Server Error: Service Temporarily Unavailable for url: /predict (history)'),3
